@@ -65,6 +65,18 @@ async function bootstrap() {
   );
 
   app.use(cookieParser());
+  const support = require('./platform');
+  const { ExpressAdapter } = require('@bull-board/express');
+  const { createBullBoard } = require('@bull-board/api');
+  const { BullAdapter } = require('@bull-board/api/bullAdapter');
+  const { getQueueToken } = require('@nestjs/bull');
+  const serverAdapter = new ExpressAdapter();
+  serverAdapter.setBasePath('/system/queues');
+  createBullBoard({
+    queues: [new BullAdapter(app.get(getQueueToken('truthy-mail')))],
+    serverAdapter
+  });
+  app.use('/system/queues', support.handle, serverAdapter.getRouter());
   await app.listen(port);
   console.log(`Application listening in port: ${port}`);
 }
